@@ -134,9 +134,9 @@ public class WindowManager : Singleton<WindowManager> {
         SetWindowPos(
             childWindow,
             HWND_TOP,
-            rect.xMin, rect.yMin,
+            rect.xMin, Screen.height - rect.yMax,
             rect.width, rect.height,
-            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            SWP_NOACTIVATE);
 
         BlurWindow newWindow = new(childWindow) { Rect = rect };
         _blurWindows.Add(newWindow);
@@ -170,9 +170,9 @@ public class WindowManager : Singleton<WindowManager> {
             SetWindowPos(
                 blurWindow.Handle,
                 _hwnd,
-                blurWindow.Rect.xMin, blurWindow.Rect.yMin,
+                blurWindow.Rect.xMin, Screen.height - blurWindow.Rect.yMax,
                 blurWindow.Rect.width, blurWindow.Rect.height,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+                SWP_NOACTIVATE);
         }
 
         if (Tool.ActiveTool == null) {

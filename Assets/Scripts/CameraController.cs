@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public class CameraController : MonoBehaviour {
     [SerializeField]
@@ -9,8 +10,19 @@ public class CameraController : MonoBehaviour {
 
     [SerializeField]
     private Tank _tank;
+    
+    [SerializeField]
+    private CameraResizer _cameraResizer;
 
-    public Rect Rect => _camera.pixelRect;
+    [SerializeField]
+    private Canvas _canvas;
+    
+    private BlurWindow _blurWindow;
+
+    public Rect Rect {
+        get => _camera.pixelRect;
+        set => _camera.pixelRect = value;
+    }
 
     public Camera Camera => _camera;
 
@@ -18,6 +30,7 @@ public class CameraController : MonoBehaviour {
 
     private void Start() {
         if (Application.platform != RuntimePlatform.WindowsPlayer) {
+            _cameraResizer.gameObject.SetActive(false);
             return;
         }
 
@@ -32,6 +45,23 @@ public class CameraController : MonoBehaviour {
             Mathf.RoundToInt(rect.width),
             Mathf.RoundToInt(rect.height));
 
-        WindowManager.Instance.CreateBlurRegion(rectInt);
+        _blurWindow = WindowManager.Instance.CreateBlurRegion(rectInt);
+    }
+
+    private void Update() {
+        if (Application.platform != RuntimePlatform.WindowsPlayer) {
+            return;
+        }
+        
+        Rect rect = _camera.pixelRect;
+        float scale = _canvas.scaleFactor;
+        _cameraResizer._rect.anchoredPosition = rect.min / scale;
+        _cameraResizer._rect.sizeDelta = rect.size / scale;
+        
+        _blurWindow.Rect = new RectInt(
+            Mathf.RoundToInt(rect.xMin),
+            Mathf.RoundToInt(rect.yMin),
+            Mathf.RoundToInt(rect.width),
+            Mathf.RoundToInt(rect.height));
     }
 }
