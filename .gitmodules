@@ -1,0 +1,3 @@
+[submodule "Packages/Infohazard.Core"]
+	path = Packages/Infohazard.Core
+	url = https://github.com/vcmiller/Infohazard.Core.git
