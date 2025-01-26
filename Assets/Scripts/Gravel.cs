@@ -31,6 +31,8 @@ public class Gravel : MonoBehaviour {
 
     private JobHandle _pourJobHandle;
     private bool _pendingPourJob;
+    private Material _material;
+    private static readonly int WaterYValue = Shader.PropertyToID("_WaterYValue");
 
     private void Start() {
         Mesh mesh = _meshFilter.mesh;
@@ -88,6 +90,8 @@ public class Gravel : MonoBehaviour {
         int heightFieldSize = (heightFieldWidth + 1) * (heightFieldDepth + 1);
         _heightField = new NativeArray<float>(heightFieldSize, Allocator.Persistent);
         _heightFieldArea = new RectInt(heightFieldMinX, heightFieldMinZ, heightFieldWidth, heightFieldDepth);
+        
+        _material = _meshFilter.GetComponent<MeshRenderer>().material;
 
         UpdateMesh();
     }
@@ -109,6 +113,10 @@ public class Gravel : MonoBehaviour {
 
         _pourJobHandle = pourJob.Schedule();
         _pendingPourJob = true;
+    }
+
+    private void Update() {
+        _material.SetFloat(WaterYValue, _tank.WaterPlane.position.y);
     }
 
     private void LateUpdate() {

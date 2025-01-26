@@ -39,8 +39,8 @@ public class GravelTool : Tool {
 
         Vector3 position = new(x, y, z);
         _camera.Tank.Gravel.Pour(_pourRate, position);
-        
-        _camera.Tank.PourAmplitude = _amplitude;
+
+        _camera.Tank.PourAmplitude = _camera.Tank.WaterPlane.position.y > _camera.Tank.Bounds.min.y ? _amplitude : 0;
         _camera.Tank.PourPosition = new Vector3(x, _camera.Tank.WaterPlane.position.y, bounds.center.z);
         SetPlayingParticles(true);
     }
@@ -57,7 +57,7 @@ public class GravelTool : Tool {
                 }
                 
                 effect.transform.position = pos;
-                emission.enabled = true;
+                emission.enabled = _effectsAtTop[i] || _camera.Tank.WaterPlane.position.y > _camera.Tank.Bounds.min.y;
             } else {
                 emission.enabled = false;
             }

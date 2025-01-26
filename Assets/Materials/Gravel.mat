@@ -93,6 +93,8 @@ Material:
     - _SrcBlend: 1
     - _TextureScale: 1
     - _UVSec: 0
+    - _WaterFadeDist: 0.1
+    - _WaterYValue: 0
     - _ZWrite: 1
     - __dirty: 0
     m_Colors:
