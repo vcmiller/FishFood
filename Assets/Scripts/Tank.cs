@@ -44,10 +44,21 @@ public class Tank : MonoBehaviour {
     public float AlgaeLevelForFullColor => _algaeLevelForFullColor;
 
     public Gravel Gravel => _gravel;
+    
+    public float PourAmplitude { get; set; }
 
+    public Vector3 PourPosition { get; set; }
+    
     public Transform WaterPlane => _waterPlane;
 
     private Material _glassMaterialInstance;
+    private Material _waterPlaneMaterialInstance;
+    private static readonly int Amplitude = Shader.PropertyToID("_Amplitude");
+    private static readonly int Position = Shader.PropertyToID("_PourPosition");
+
+    private void Awake() {
+        _waterPlaneMaterialInstance = _waterPlane.GetComponent<MeshRenderer>().material;
+    }
 
     private void Start() {
         _glassMaterialInstance = new Material(_glassMaterial);
@@ -74,6 +85,18 @@ public class Tank : MonoBehaviour {
         Bounds fishBounds = Bounds;
         fishBounds.max = fishBounds.max.WithY(_waterPlane.position.y);
         FishBounds = fishBounds;
+        
+        float curAmp = _waterPlaneMaterialInstance.GetFloat(Amplitude);
+        curAmp = Mathf.MoveTowards(curAmp, PourAmplitude, 0.5f * Time.deltaTime);
+        _waterPlaneMaterialInstance.SetFloat(Amplitude, curAmp);
+
+        if (curAmp > 0) {
+            Vector3 curPourPosition = _waterPlaneMaterialInstance.GetVector(Position);
+            Vector3 localPourPosition = _waterPlane.InverseTransformPoint(PourPosition);
+            localPourPosition.y = 0;
+            curPourPosition = Vector3.MoveTowards(curPourPosition, localPourPosition, 1 * Time.deltaTime);
+            _waterPlaneMaterialInstance.SetVector(Position, curPourPosition);
+        }
     }
 
     private void OnDrawGizmosSelected() {
