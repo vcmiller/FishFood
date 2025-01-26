@@ -9,13 +9,14 @@ Shader "Plant2"
 		_AreaFrequency("AreaFrequency", Float) = 10
 		_Magnitude("Magnitude", Float) = 0.1
 		_MaxY("MaxY", Float) = 1
+		[HDR]_EmissionColor("EmissionColor", Color) = (0,0,0)
 		_YNoiseScale("YNoiseScale", Float) = 0
 		[HideInInspector] __dirty( "", Int ) = 1
 	}
 
 	SubShader
 	{
-		Tags{ "RenderType" = "Opaque"  "Queue" = "Geometry+0" }
+		Tags{ "RenderType" = "Opaque"  "Queue" = "Geometry+0" "IsEmissive" = "true"  }
 		Cull Off
 		CGPROGRAM
 		#include "UnityShaderVariables.cginc"
@@ -46,6 +47,7 @@ Shader "Plant2"
 		uniform float _Magnitude;
 		uniform float _MaxY;
 		uniform float4 _Color;
+		uniform float3 _EmissionColor;
 
 
 		float3 mod2D289( float3 x ) { return x - floor( x * ( 1.0 / 289.0 ) ) * 289.0; }
@@ -128,6 +130,7 @@ Shader "Plant2"
 		void surf( Input i , inout SurfaceOutputStandardCustom o )
 		{
 			o.Albedo = _Color.rgb;
+			o.Emission = _EmissionColor;
 			float3 temp_cast_1 = (0.5).xxx;
 			o.Transmission = temp_cast_1;
 			o.Alpha = 1;
@@ -149,7 +152,7 @@ Node;AmplifyShaderEditor.SimpleMultiplyOpNode;8;-1104,384;Inherit;False;2;2;0;FL
 Node;AmplifyShaderEditor.SimpleAddOpNode;10;-784,464;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.SimpleAddOpNode;12;-784,576;Inherit;False;3;3;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.NoiseGeneratorNode;5;-608,464;Inherit;False;Simplex2D;False;False;2;0;FLOAT2;0,0;False;1;FLOAT;1;False;1;FLOAT;0
-Node;AmplifyShaderEditor.RangedFloatNode;25;-576,240;Inherit;False;Property;_YNoiseScale;YNoiseScale;5;0;Create;True;0;0;0;False;0;False;0;0.1;0;0;0;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode;25;-576,240;Inherit;False;Property;_YNoiseScale;YNoiseScale;6;0;Create;True;0;0;0;False;0;False;0;0.1;0;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.SimpleAddOpNode;9;-784,352;Inherit;False;3;3;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.NoiseGeneratorNode;4;-608,352;Inherit;False;Simplex2D;False;False;2;0;FLOAT2;0,0;False;1;FLOAT;1;False;1;FLOAT;0
 Node;AmplifyShaderEditor.NoiseGeneratorNode;11;-608,576;Inherit;False;Simplex2D;False;False;2;0;FLOAT2;0,0;False;1;FLOAT;1;False;1;FLOAT;0
@@ -162,6 +165,7 @@ Node;AmplifyShaderEditor.FunctionNode;23;-224,832;Inherit;False;Inverse Lerp;-1;
 Node;AmplifyShaderEditor.ColorNode;2;-352,-48;Inherit;False;Property;_Color;Color;0;0;Create;True;0;0;0;False;0;False;0,0,0,0;0,0.4933281,0.0528768,1;True;True;0;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
 Node;AmplifyShaderEditor.RangedFloatNode;3;-352,176;Inherit;False;Constant;_Float0;Float 0;1;0;Create;True;0;0;0;False;0;False;0.5;0;0;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode;17;-80,496;Inherit;False;3;3;0;FLOAT3;0,0,0;False;1;FLOAT;0;False;2;FLOAT;0;False;1;FLOAT3;0
+Node;AmplifyShaderEditor.ColorNode;27;-144,288;Inherit;False;Property;_EmissionColor;EmissionColor;5;1;[HDR];Create;True;0;0;0;False;0;False;0,0,0,0;0,0,0,0;True;False;0;6;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
 Node;AmplifyShaderEditor.StandardSurfaceOutputNode;0;208,112;Float;False;True;-1;3;AmplifyShaderEditor.MaterialInspector;0;0;Standard;Plant2;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;Off;0;False;;0;False;;False;0;False;;0;False;;False;0;Opaque;0.5;True;True;0;False;Opaque;;Geometry;ForwardOnly;12;all;True;True;True;True;0;False;;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;2;15;10;25;False;0.5;True;0;0;False;;0;False;;0;0;False;;0;False;;0;False;;0;False;;0;False;0;0,0,0,0;VertexOffset;True;False;Cylindrical;False;True;Relative;0;;-1;-1;-1;-1;0;False;0;0;False;;-1;0;False;;0;0;0;False;0.1;False;;0;False;;False;17;0;FLOAT3;0,0,0;False;1;FLOAT3;0,0,0;False;2;FLOAT3;0,0,0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT3;0,0,0;False;7;FLOAT3;0,0,0;False;8;FLOAT;0;False;9;FLOAT;0;False;10;FLOAT;0;False;13;FLOAT3;0,0,0;False;11;FLOAT3;0,0,0;False;12;FLOAT3;0,0,0;False;16;FLOAT4;0,0,0,0;False;14;FLOAT4;0,0,0,0;False;15;FLOAT3;0,0,0;False;0
 WireConnection;14;0;13;2
 WireConnection;14;1;16;0
@@ -189,7 +193,8 @@ WireConnection;17;0;19;0
 WireConnection;17;1;20;0
 WireConnection;17;2;23;0
 WireConnection;0;0;2;0
+WireConnection;0;2;27;0
 WireConnection;0;6;3;0
 WireConnection;0;11;17;0
 ASEEND*/
-//CHKSM=AFE05B9E5C9F4E650D2E31597426F0BC2A269D6E
+//CHKSM=47E6520F687D6253ABFF633C995F3B110FA595E1

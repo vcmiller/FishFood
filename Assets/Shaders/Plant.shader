@@ -8,12 +8,13 @@ Shader "Plant"
 		_TimeFrequency("TimeFrequency", Float) = 1
 		_AreaFrequency("AreaFrequency", Float) = 10
 		_Magnitude("Magnitude", Float) = 0.1
+		[HDR]_EmissionColor("EmissionColor", Color) = (0,0,0)
 		[HideInInspector] __dirty( "", Int ) = 1
 	}
 
 	SubShader
 	{
-		Tags{ "RenderType" = "Opaque"  "Queue" = "Geometry+0" }
+		Tags{ "RenderType" = "Opaque"  "Queue" = "Geometry+0" "IsEmissive" = "true"  }
 		Cull Off
 		CGPROGRAM
 		#include "UnityShaderVariables.cginc"
@@ -42,6 +43,7 @@ Shader "Plant"
 		uniform float _AreaFrequency;
 		uniform float _Magnitude;
 		uniform float4 _Color;
+		uniform float3 _EmissionColor;
 
 
 		float3 mod2D289( float3 x ) { return x - floor( x * ( 1.0 / 289.0 ) ) * 289.0; }
@@ -122,6 +124,7 @@ Shader "Plant"
 		void surf( Input i , inout SurfaceOutputStandardCustom o )
 		{
 			o.Albedo = _Color.rgb;
+			o.Emission = _EmissionColor;
 			float3 temp_cast_1 = (0.5).xxx;
 			o.Transmission = temp_cast_1;
 			o.Alpha = 1;
@@ -153,6 +156,7 @@ Node;AmplifyShaderEditor.TexCoordVertexDataNode;21;-384,688;Inherit;False;0;2;0;
 Node;AmplifyShaderEditor.ColorNode;2;-352,-48;Inherit;False;Property;_Color;Color;0;0;Create;True;0;0;0;False;0;False;0,0,0,0;0,0,0,0;True;True;0;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
 Node;AmplifyShaderEditor.RangedFloatNode;3;-352,176;Inherit;False;Constant;_Float0;Float 0;1;0;Create;True;0;0;0;False;0;False;0.5;0;0;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode;17;-80,496;Inherit;False;3;3;0;FLOAT3;0,0,0;False;1;FLOAT;0;False;2;FLOAT;0;False;1;FLOAT3;0
+Node;AmplifyShaderEditor.ColorNode;22;-176,256;Inherit;False;Property;_EmissionColor;EmissionColor;4;1;[HDR];Create;True;0;0;0;False;0;False;0,0,0,0;0,0,0,0;True;False;0;6;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
 Node;AmplifyShaderEditor.StandardSurfaceOutputNode;0;208,112;Float;False;True;-1;3;AmplifyShaderEditor.MaterialInspector;0;0;Standard;Plant;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;Off;0;False;;0;False;;False;0;False;;0;False;;False;0;Opaque;0.5;True;True;0;False;Opaque;;Geometry;ForwardOnly;12;all;True;True;True;True;0;False;;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;2;15;10;25;False;0.5;True;0;0;False;;0;False;;0;0;False;;0;False;;0;False;;0;False;;0;False;0;0,0,0,0;VertexOffset;True;False;Cylindrical;False;True;Relative;0;;-1;-1;-1;-1;0;False;0;0;False;;-1;0;False;;0;0;0;False;0.1;False;;0;False;;False;17;0;FLOAT3;0,0,0;False;1;FLOAT3;0,0,0;False;2;FLOAT3;0,0,0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT3;0,0,0;False;7;FLOAT3;0,0,0;False;8;FLOAT;0;False;9;FLOAT;0;False;10;FLOAT;0;False;13;FLOAT3;0,0,0;False;11;FLOAT3;0,0,0;False;12;FLOAT3;0,0,0;False;16;FLOAT4;0,0,0,0;False;14;FLOAT4;0,0,0,0;False;15;FLOAT3;0,0,0;False;0
 WireConnection;14;0;13;0
 WireConnection;14;1;16;0
@@ -175,7 +179,8 @@ WireConnection;17;0;19;0
 WireConnection;17;1;20;0
 WireConnection;17;2;21;2
 WireConnection;0;0;2;0
+WireConnection;0;2;22;0
 WireConnection;0;6;3;0
 WireConnection;0;11;17;0
 ASEEND*/
-//CHKSM=23AB671407AFF4D64E6C9245A75BEFCEE92DBD20
+//CHKSM=183FFDFF2F1A07F51619E15C10F6642A70220C18

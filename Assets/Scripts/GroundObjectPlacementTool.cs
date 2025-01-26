@@ -1,4 +1,5 @@
-﻿using Infohazard.Core;
+﻿using System;
+using Infohazard.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,16 +14,47 @@ public class GroundObjectPlacementTool : Tool {
 
     public LayerMask _groundLayerMask;
 
+    private float _rotation;
+
+    private Mesh _mesh;
+    private Material[] _materials;
+    private Matrix4x4 _matrix;
+    private static readonly int EmissionColor = Shader.PropertyToID("_EmissionColor");
+
     protected override void Awake() {
         base.Awake();
 
         _buttonImage = _button.GetComponent<Image>();
+        
+        MeshFilter meshFilter = _placementObject.GetComponentInChildren<MeshFilter>();
+        _mesh = meshFilter.sharedMesh;
+        _materials = meshFilter.GetComponent<MeshRenderer>().sharedMaterials;
+        _matrix = _placementObject.transform.worldToLocalMatrix * meshFilter.transform.localToWorldMatrix;
+
+        for (int i = 0; i < _materials.Length; i++) {
+            Material mat = new(_materials[i]);
+            mat.SetColor(EmissionColor, new Color(0, 0.2f, 0));
+            _materials[i] = mat;
+        }
+    }
+
+    private void OnDestroy() {
+        for (int i = 0; i < _materials.Length; i++) {
+            DestroyImmediate(_materials[i]);
+        }
     }
 
     public override void Activate() {
         base.Activate();
 
         _placementImage.sprite = _buttonImage.sprite;
+        _rotation = 0;
+    }
+
+    public override void Deactivate() {
+        base.Deactivate();
+        
+        _placementImage.enabled = true;
     }
 
     protected override void Update() {
@@ -32,9 +64,21 @@ public class GroundObjectPlacementTool : Tool {
 
         _validPlacementIndicator.gameObject.SetActive(canPlace);
         _invalidPlacementIndicator.gameObject.SetActive(!canPlace);
+        _placementImage.enabled = canPlace;
+        
+        _rotation += Input.mouseScrollDelta.y * 10;
+
+        if (canPlace) {
+            Matrix4x4 meshPreviewMatrix =
+                Matrix4x4.TRS(point, Quaternion.Euler(0, _rotation, 0), Vector3.one) * _matrix;
+
+            for (int i = 0; i < _materials.Length; i++) {
+                Graphics.DrawMesh(_mesh, meshPreviewMatrix, _materials[i], 0, _camera.Camera, i);
+            }
+        }
 
         if (canPlace && Input.GetMouseButtonDown(0)) {
-            Instantiate(_placementObject, point, Quaternion.identity);
+            Instantiate(_placementObject, point, Quaternion.Euler(0, _rotation, 0));
         }
     }
 
