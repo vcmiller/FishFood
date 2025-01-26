@@ -1,4 +1,5 @@
 ﻿using System;
+using Infohazard.Core;
 using UnityEngine;
 
 public class Tank : MonoBehaviour {
@@ -29,7 +30,12 @@ public class Tank : MonoBehaviour {
     [SerializeField]
     private Gravel _gravel;
 
+    [SerializeField]
+    private Transform _waterPlane;
+
     public Bounds Bounds => _bounds;
+
+    public Bounds FishBounds { get; private set; }
 
     public float DissolvedFoodLevel { get; set; }
 
@@ -38,6 +44,8 @@ public class Tank : MonoBehaviour {
     public float AlgaeLevelForFullColor => _algaeLevelForFullColor;
 
     public Gravel Gravel => _gravel;
+
+    public Transform WaterPlane => _waterPlane;
 
     private Material _glassMaterialInstance;
 
@@ -58,10 +66,14 @@ public class Tank : MonoBehaviour {
         if (DissolvedFoodLevel > 0) {
             DissolvedFoodLevel -= _algaeFoodConsumption * Time.deltaTime;
             AlgaeLevel += _baseAlgaeGrowthRate * Time.deltaTime;
-
-            Color glassColor = Color.Lerp(_originalGlassColor, _algaeColor, AlgaeLevel / _algaeLevelForFullColor);
-            _glassMaterialInstance.color = glassColor;
         }
+
+        Color glassColor = Color.Lerp(_originalGlassColor, _algaeColor, AlgaeLevel / _algaeLevelForFullColor);
+        _glassMaterialInstance.color = glassColor;
+
+        Bounds fishBounds = Bounds;
+        fishBounds.max = fishBounds.max.WithY(_waterPlane.position.y);
+        FishBounds = fishBounds;
     }
 
     private void OnDrawGizmosSelected() {

@@ -12,9 +12,15 @@ public class CameraController : MonoBehaviour {
 
     public Rect Rect => _camera.pixelRect;
 
+    public Camera Camera => _camera;
+
     public Tank Tank => _tank;
 
     private void Start() {
+        if (Application.platform != RuntimePlatform.WindowsPlayer) {
+            return;
+        }
+
         Vector2 center = new(Screen.width * 0.5f, Screen.height * 0.5f);
         Rect rect = new(center - _pixelSize * 0.5f, _pixelSize);
 

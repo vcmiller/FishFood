@@ -11,8 +11,7 @@ public class Fish : MonoBehaviour {
     [SerializeField]
     private SkinnedMeshRenderer _skinRenderer;
 
-    [SerializeField]
-    private Tank _tank;
+    public Tank _tank;
 
     [SerializeField]
     private int _species;
@@ -26,6 +25,12 @@ public class Fish : MonoBehaviour {
 
     [SerializeField]
     private float _rotateSpeed;
+
+    [SerializeField]
+    private LayerMask _avoidanceLayers;
+
+    [SerializeField]
+    private float _avoidanceDistance = 0.1f;
 
     [Header("Bubbles")]
     [SerializeField]
@@ -355,13 +360,11 @@ public class Fish : MonoBehaviour {
         return new Vector3(x, y, z);
     }
 
-    private Vector3 CalculateCohesion()
-    {
+    private Vector3 CalculateCohesion() {
         Vector3 centerOfMass = Vector3.zero;
         int neighborCount = 0;
 
-        if (_speciesGroups.TryGetValue(_species, out List<Fish> sameSpeciesFish))
-        {
+        if (_speciesGroups.TryGetValue(_species, out List<Fish> sameSpeciesFish)) {
             foreach (Fish fish in sameSpeciesFish) {
                 if (fish == this ||
                     !(Vector3.Distance(transform.position, fish.transform.position) < _neighborDistance)) continue;
@@ -370,8 +373,7 @@ public class Fish : MonoBehaviour {
             }
         }
 
-        if (neighborCount > 0)
-        {
+        if (neighborCount > 0) {
             centerOfMass /= neighborCount;
             return (centerOfMass - transform.position).normalized;
         }
@@ -379,25 +381,20 @@ public class Fish : MonoBehaviour {
         return Vector3.zero;
     }
 
-    private Vector3 CalculateAlignment()
-    {
+    private Vector3 CalculateAlignment() {
         Vector3 averageDirection = Vector3.zero;
         int neighborCount = 0;
 
-        if (_speciesGroups.TryGetValue(_species, out List<Fish> sameSpeciesFish))
-        {
-            foreach (Fish fish in sameSpeciesFish)
-            {
-                if (fish != this && Vector3.Distance(transform.position, fish.transform.position) < _neighborDistance)
-                {
+        if (_speciesGroups.TryGetValue(_species, out List<Fish> sameSpeciesFish)) {
+            foreach (Fish fish in sameSpeciesFish) {
+                if (fish != this && Vector3.Distance(transform.position, fish.transform.position) < _neighborDistance) {
                     averageDirection += fish.transform.forward;
                     neighborCount++;
                 }
             }
         }
 
-        if (neighborCount > 0)
-        {
+        if (neighborCount > 0) {
             averageDirection /= neighborCount;
             return averageDirection.normalized;
         }
@@ -405,8 +402,7 @@ public class Fish : MonoBehaviour {
         return Vector3.zero;
     }
 
-    private Vector3 CalculateSeparation()
-    {
+    private Vector3 CalculateSeparation() {
         Vector3 avoidance = Vector3.zero;
         int neighborCount = 0;
 
@@ -423,8 +419,7 @@ public class Fish : MonoBehaviour {
             }
         }
 
-        if (neighborCount > 0)
-        {
+        if (neighborCount > 0) {
             avoidance /= neighborCount;
             return avoidance.normalized;
         }
@@ -434,7 +429,7 @@ public class Fish : MonoBehaviour {
 
     private void ApplyCollisionDetection() {
         Vector3 position = transform.position;
-        Bounds bounds = _tank.Bounds;
+        Bounds bounds = _tank.FishBounds;
 
         Vector3 hitNormal = Vector3.zero;
         bool hit = false;
@@ -477,13 +472,19 @@ public class Fish : MonoBehaviour {
             _lastDesiredRotation = Quaternion.LookRotation(newForward, Vector3.up);
             _keepRotatingTimer.Interval = Quaternion.Angle(transform.rotation, _lastDesiredRotation) / _rotateSpeed;
             _keepRotatingTimer.StartInterval();
+        } else if (Physics.SphereCast(position, _radius, transform.forward, out RaycastHit hitInfo, _avoidanceDistance,
+                               _avoidanceLayers)) {
+            Vector3 newForward = Vector3.Reflect(transform.forward, hitInfo.normal);
+            _lastDesiredRotation = Quaternion.LookRotation(newForward, Vector3.up);
+            _keepRotatingTimer.Interval = Quaternion.Angle(transform.rotation, _lastDesiredRotation) / _rotateSpeed;
+            _keepRotatingTimer.StartInterval();
         }
     }
 
     private void OnTriggerEnter(Collider other) {
         if (other.TryGetComponent(out FishFood food) && _feedingTimer.TryConsume()) {
             Food += food.Value;
-            Destroy(food.gameObject);
+            food.OnEat();
         }
     }
 

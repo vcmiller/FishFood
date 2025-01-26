@@ -29,6 +29,12 @@ public class FishFood : MonoBehaviour {
         _lifetimeTimer = new PassiveTimer(UnityEngine.Random.Range(_minLifetime, _maxLifetime));
     }
 
+    public void OnEat() {
+        Instantiate(_dissolveEffectPrefab, transform.position, Quaternion.identity);
+        Destroy(gameObject);
+        Tank.DissolvedFoodLevel += _foodValue * 0.25f;
+    }
+
     private void Update() {
         if (_lifetimeTimer.IsIntervalEnded) {
             Instantiate(_dissolveEffectPrefab, transform.position, Quaternion.identity);
