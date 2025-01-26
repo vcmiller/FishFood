@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2452596727827605758}
   - component: {fileID: 3203273991084909930}
   - component: {fileID: 9068736814494286759}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Fish
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -70,6 +70,7 @@ MonoBehaviour:
   _spearationDistance: 0.2
   _neighborDistance: 0.3
   _flockRotateSpeed: 90
+  _returnToHorizontalWeight: 1
   _foodDetectionRadius: 0.5
   _foodSteeringWeight: 5
   _feedingCooldown: 2
@@ -154,7 +155,7 @@ GameObject:
   - component: {fileID: 5914227398490981154}
   - component: {fileID: 2547614648529129999}
   - component: {fileID: 2884319060291082198}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Bubble
   m_TagString: Untagged
   m_Icon: {fileID: 0}

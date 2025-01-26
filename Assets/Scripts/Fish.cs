@@ -282,7 +282,7 @@ public class Fish : MonoBehaviour {
             Quaternion.Slerp(transform.rotation, targetRotation, _deadRotateSpeed * Time.deltaTime);
 
         Vector3 position = transform.position;
-        position.y = Mathf.MoveTowards(position.y, _tank.Bounds.max.y, _deadSpeed * Time.deltaTime);
+        position.y = Mathf.MoveTowards(position.y, _tank.FishBounds.max.y, _deadSpeed * Time.deltaTime);
         transform.position = position;
     }
 
