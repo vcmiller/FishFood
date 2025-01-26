@@ -1,11 +1,10 @@
 ﻿using UnityEngine;
 
 public class FoodTool : Tool {
-    public GameObject _foodPrefab;
+    public FishFood _foodPrefab;
     public int _numToCreate;
     public float _range = 0.1f;
-
-    public CameraController _camera;
+    private static readonly int Shake = Animator.StringToHash("Shake");
 
     protected override void Update() {
         base.Update();
@@ -13,6 +12,8 @@ public class FoodTool : Tool {
         if (Input.GetMouseButtonDown(0)) {
             Rect cameraRect = _camera.Rect;
             if (!cameraRect.Contains(Input.mousePosition)) return;
+
+            _animator.SetTrigger(Shake);
 
             Bounds bounds = _camera.Tank.Bounds;
 
@@ -23,7 +24,8 @@ public class FoodTool : Tool {
 
             for (int i = 0; i < _numToCreate; i++) {
                 Vector3 position = basePosition + Random.insideUnitSphere * _range;
-                Instantiate(_foodPrefab, position, Quaternion.identity);
+                FishFood food = Instantiate(_foodPrefab, position, Quaternion.identity);
+                food.Tank = _camera.Tank;
             }
         }
     }

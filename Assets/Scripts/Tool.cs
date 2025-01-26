@@ -3,16 +3,20 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class Tool : MonoBehaviour {
+    public CameraController _camera;
     public Button _button;
 
     public RectTransform _toolTransform;
 
     public bool IsActive { get; private set; }
 
+    protected Animator _animator;
+
     public static Tool ActiveTool { get; private set; }
 
     protected virtual void Awake() {
         _toolTransform.gameObject.SetActive(false);
+        _animator = _toolTransform.GetComponent<Animator>();
         enabled = false;
     }
 

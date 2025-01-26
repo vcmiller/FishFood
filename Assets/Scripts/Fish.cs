@@ -9,6 +9,9 @@ public class Fish : MonoBehaviour {
     private Animator _animator;
 
     [SerializeField]
+    private SkinnedMeshRenderer _skinRenderer;
+
+    [SerializeField]
     private Tank _tank;
 
     [SerializeField]
@@ -76,17 +79,89 @@ public class Fish : MonoBehaviour {
     [SerializeField]
     private float _feedingSpeedMultiplier = 2;
 
+    [SerializeField]
+    private float _maxFoodToEat = 10;
+
+    [SerializeField]
+    private float _startingFood = 1;
+
+    [SerializeField]
+    private float _foodDecayRate = 0.05f;
+
+    [Header("Health")]
+    [SerializeField]
+    private int _skinnyBlendShapeIndex = 0;
+
+    [SerializeField]
+    private int _bloatedBlendShapeIndex = 1;
+
+    [SerializeField]
+    private float _foodForMaxBloat = 3;
+
+    [SerializeField]
+    private float _foodForMinBloat = 1.5f;
+
+    [SerializeField]
+    private float _foodForMaxSkinny = 0;
+
+    [SerializeField]
+    private float _foodForMinSkinny = 0.5f;
+
+    [SerializeField]
+    private float _maxHealth = 100;
+
+    [SerializeField]
+    private float _starvationDamagePerSecond = 2;
+
+    [SerializeField]
+    private float _overfeedingDamagePerSecond = 2;
+
+    [SerializeField]
+    private float _algaeDamagePerSecond = 2;
+
+    [SerializeField]
+    private float _healthRegenRate = 5;
+
+    [SerializeField]
+    private float _healthRegenDelay = 5;
+
+    [SerializeField]
+    private Color _noHealthColor = Color.white;
+
+    [SerializeField]
+    private float _maxFadeToNoHealthColor = 0.8f;
+
+    [Header("Death")]
+    [SerializeField]
+    private float _deadRotateSpeed = 90;
+
+    [SerializeField]
+    private float _deadSpeed = 0.5f;
+
     private PassiveTimer _keepRotatingTimer;
     private PassiveTimer _bubbleTimer;
     private PassiveTimer _feedingTimer;
+    private PassiveTimer _healthRegenTimer;
     private Quaternion _lastDesiredRotation;
     private float _randomSteeringTime;
     private Vector3 _randomSteeringOffsets;
+    private bool _isEating;
+
+    private Material[] _materials;
+    private Color[] _originalColors;
+    private Color[] _originalEmissionColors;
+
+    public float Food { get; set; }
+
+    public float Health { get; set; }
+
+    public bool IsADeadFish { get; private set; }
 
     private static readonly Dictionary<int, List<Fish>> _speciesGroups = new();
 
     private static readonly int Swimming = Animator.StringToHash("Swimming");
     private static readonly int Offset = Animator.StringToHash("Offset");
+    private static readonly int EmissionColor = Shader.PropertyToID("_EmissionColor");
 
     private void Start() {
         _animator.SetBool(Swimming, true);
@@ -107,6 +182,19 @@ public class Fish : MonoBehaviour {
         _animator.SetFloat(Offset, Random.value);
 
         _feedingTimer = new PassiveTimer(0, _feedingCooldown);
+        _healthRegenTimer = new PassiveTimer(0, _healthRegenDelay);
+
+        Food = _startingFood;
+        Health = _maxHealth;
+
+        _materials = _skinRenderer.materials;
+        _originalColors = new Color[_materials.Length];
+        _originalEmissionColors = new Color[_materials.Length];
+
+        for (int i = 0; i < _materials.Length; i++) {
+            _originalColors[i] = _materials[i].color;
+            _originalEmissionColors[i] = _materials[i].GetColor(EmissionColor);
+        }
     }
 
     private void OnDestroy() {
@@ -115,15 +203,29 @@ public class Fish : MonoBehaviour {
         }
     }
 
+    private void Damage(float amount) {
+        Health = Mathf.Clamp(Health - amount, 0, _maxHealth);
+        _healthRegenTimer.StartInterval();
+
+        if (Health <= 0) {
+            IsADeadFish = true;
+        }
+    }
+
     private void Update() {
-        if (_keepRotatingTimer.IsIntervalEnded) {
-            ApplySteering(out float speed);
+        if (IsADeadFish) {
+            UpdateDead();
+            return;
+        }
+
+        if (_keepRotatingTimer.IsIntervalEnded || _isEating) {
+            ApplySteering(out float speed, out _isEating);
             transform.Translate(Vector3.forward * (speed * Time.deltaTime));
         }
 
         ApplyCollisionDetection();
 
-        if (!_keepRotatingTimer.IsIntervalEnded) {
+        if (!_keepRotatingTimer.IsIntervalEnded && !_isEating) {
             transform.rotation =
                 Quaternion.RotateTowards(transform.rotation, _lastDesiredRotation, _rotateSpeed * Time.deltaTime);
         }
@@ -133,19 +235,83 @@ public class Fish : MonoBehaviour {
             _bubbleTimer.Interval = Random.Range(_minBubbleDelay, _maxBubbleDelay);
             _bubbleTimer.StartInterval();
         }
+
+        UpdateFood();
+        UpdateHealth();
     }
 
-    private void ApplySteering(out float moveSpeed) {
-        moveSpeed = _speed;
+    private void LateUpdate() {
+        if (!IsADeadFish) {
+            UpdateVisuals();
+        }
+    }
 
-        Vector3 foodSteering = CalculateFoodSteering(out FishFood foundFood) * _foodSteeringWeight;
+    private void UpdateDead() {
+        _animator.SetBool(Swimming, false);
+
+        Quaternion targetRotation = MathUtility.YZRotation(Vector3.down, transform.forward);
+        transform.rotation =
+            Quaternion.Slerp(transform.rotation, targetRotation, _deadRotateSpeed * Time.deltaTime);
+
+        Vector3 position = transform.position;
+        position.y = Mathf.MoveTowards(position.y, _tank.Bounds.max.y, _deadSpeed * Time.deltaTime);
+        transform.position = position;
+    }
+
+    private void UpdateFood() {
+        Food -= _foodDecayRate * Time.deltaTime;
+        Food = Mathf.Max(0, Food);
+
+        if (Food <= _foodForMaxSkinny) {
+            Damage(_starvationDamagePerSecond * Time.deltaTime);
+        } else if (Food >= _foodForMaxBloat) {
+            Damage(_overfeedingDamagePerSecond * Time.deltaTime);
+        }
+    }
+
+    private void UpdateHealth() {
+        if (_healthRegenTimer.IsIntervalEnded) {
+            Health = Mathf.Clamp(Health + _healthRegenRate * Time.deltaTime, 0, _maxHealth);
+        }
+
+        if (_tank.AlgaeLevel > _tank.AlgaeLevelForFullColor) {
+            Damage(_algaeDamagePerSecond * Time.deltaTime);
+        }
+    }
+
+    private void UpdateVisuals() {
+        float bloat = Mathf.InverseLerp(_foodForMinBloat, _foodForMaxBloat, Food);
+        float skinny = Mathf.InverseLerp(_foodForMinSkinny, _foodForMaxSkinny, Food);
+
+        _skinRenderer.SetBlendShapeWeight(_bloatedBlendShapeIndex, bloat * 100);
+        _skinRenderer.SetBlendShapeWeight(_skinnyBlendShapeIndex, skinny * 100);
+
+        float colorLerp = Mathf.Min(_maxFadeToNoHealthColor, 1.0f - Health / _maxHealth);
+        for (int i = 0; i < _materials.Length; i++) {
+            _materials[i].color = Color.Lerp(_originalColors[i], _noHealthColor, colorLerp);
+            _materials[i].SetColor(EmissionColor, Color.Lerp(_originalEmissionColors[i], Color.black, colorLerp));
+        }
+    }
+
+    private void ApplySteering(out float moveSpeed, out bool isEating) {
+        moveSpeed = _speed;
+        float rotateSpeed = _flockRotateSpeed;
+
+        float hungerWeight = Mathf.InverseLerp(_maxFoodToEat, _foodForMaxBloat, Food);
+
+        Vector3 foodSteering = CalculateFoodSteering(out FishFood foundFood) * _foodSteeringWeight * hungerWeight;
         Vector3 randomSteering = CalculateRandomSteering() * _randomSteeringMagnitude;
         Vector3 cohesion = CalculateCohesion() * _flockCohesionWeight;
         Vector3 alignment = CalculateAlignment() * _flockAlignmentWeight;
         Vector3 separation = CalculateSeparation() * _flockSeparationWeight;
 
         if (foundFood) {
-            moveSpeed *= _feedingSpeedMultiplier;
+            float multiplier = Mathf.Lerp(1, _feedingSpeedMultiplier, hungerWeight);
+            moveSpeed *= multiplier;
+            rotateSpeed *= multiplier;
+            isEating = hungerWeight > 0;
+        } else {
+            isEating = false;
         }
 
         // Combine the forces
@@ -158,7 +324,7 @@ public class Fish : MonoBehaviour {
         // Rotate the fish towards the desired direction
         Quaternion targetRotation = Quaternion.LookRotation(desiredDirection, Vector3.up);
         transform.rotation =
-            Quaternion.RotateTowards(transform.rotation, targetRotation, _flockRotateSpeed * Time.deltaTime);
+            Quaternion.RotateTowards(transform.rotation, targetRotation, rotateSpeed * Time.deltaTime);
     }
 
     private Vector3 CalculateFoodSteering(out FishFood foundFood) {
@@ -316,6 +482,7 @@ public class Fish : MonoBehaviour {
 
     private void OnTriggerEnter(Collider other) {
         if (other.TryGetComponent(out FishFood food) && _feedingTimer.TryConsume()) {
+            Food += food.Value;
             Destroy(food.gameObject);
         }
     }
