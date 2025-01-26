@@ -70,6 +70,9 @@ public class Fish : MonoBehaviour {
 
     [SerializeField]
     private float _flockRotateSpeed = 180;
+    
+    [SerializeField]
+    private float _returnToHorizontalWeight = 1;
 
     [Header("Feeding")]
     [SerializeField]
@@ -225,7 +228,27 @@ public class Fish : MonoBehaviour {
 
         if (_keepRotatingTimer.IsIntervalEnded || _isEating) {
             ApplySteering(out float speed, out _isEating);
-            transform.Translate(Vector3.forward * (speed * Time.deltaTime));
+            
+            Vector3 newPos = transform.position + transform.forward * (speed * Time.deltaTime);
+
+            float padding = 0.01f;
+            for (int i = 0; i < 5; i++) {
+                Vector3 dir = newPos - transform.position;
+                float dist = dir.magnitude;
+                dir /= dist;
+                if (Physics.SphereCast(transform.position - dir * padding, _radius * 0.8f, dir,
+                        out RaycastHit hit, dist + padding, _avoidanceLayers)) {
+
+                    if (i < 4) {
+                        float extraDistance = dist - (hit.distance - padding);
+                        newPos += hit.normal * (extraDistance * Vector3.Dot(dir, -hit.normal));
+                    } else {
+                        newPos = transform.position + dir * (hit.distance - padding);
+                    }
+                }
+            }
+            
+            transform.position = newPos;
         }
 
         ApplyCollisionDetection();
@@ -318,9 +341,11 @@ public class Fish : MonoBehaviour {
         } else {
             isEating = false;
         }
+        
+        Vector3 returnToHorizontal = CalculateReturnToHorizontal(isEating) * _returnToHorizontalWeight;
 
         // Combine the forces
-        Vector3 flockingForce = foodSteering + randomSteering + cohesion + alignment + separation;
+        Vector3 flockingForce = foodSteering + randomSteering + cohesion + alignment + separation + returnToHorizontal;
 
         // Calculate the desired direction
         Vector3 desiredDirection = transform.forward + flockingForce * Time.deltaTime;
@@ -425,6 +450,10 @@ public class Fish : MonoBehaviour {
         }
 
         return Vector3.zero;
+    }
+
+    private Vector3 CalculateReturnToHorizontal(bool isFeeding) {
+        return new Vector3(0, -transform.forward.y, 0);
     }
 
     private void ApplyCollisionDetection() {
