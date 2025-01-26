@@ -26,6 +26,9 @@ public class Tank : MonoBehaviour {
     [SerializeField]
     private float _algaeLevelForFullColor;
 
+    [SerializeField]
+    private Gravel _gravel;
+
     public Bounds Bounds => _bounds;
 
     public float DissolvedFoodLevel { get; set; }
@@ -33,6 +36,8 @@ public class Tank : MonoBehaviour {
     public float AlgaeLevel { get; set; }
 
     public float AlgaeLevelForFullColor => _algaeLevelForFullColor;
+
+    public Gravel Gravel => _gravel;
 
     private Material _glassMaterialInstance;
 
