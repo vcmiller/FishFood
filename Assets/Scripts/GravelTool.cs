@@ -8,11 +8,22 @@ public class GravelTool : Tool {
 
     public ParticleSystem[] _pourEffects;
     public bool[] _effectsAtTop;
+    
+    public AudioSource _pourSoundSource;
+    public AudioClip[] _pourSounds;
+    
+    public PassiveTimer _pourSoundTimer;
 
     public override void Deactivate() {
         base.Deactivate();
         _camera.Tank.PourAmplitude = 0;
         SetPlayingParticles(false);
+    }
+
+    protected override void Awake() {
+        base.Awake();
+        
+        _pourSoundTimer.Initialize();
     }
 
     protected override void Update() {
@@ -29,6 +40,10 @@ public class GravelTool : Tool {
             _camera.Tank.PourAmplitude = 0;
             SetPlayingParticles(false);
             return;
+        }
+
+        if (_pourSoundTimer.TryConsume()) {
+            _pourSoundSource.PlayOneShot(_pourSounds[Random.Range(0, _pourSounds.Length)]);
         }
 
         Bounds bounds = _camera.Tank.Bounds;

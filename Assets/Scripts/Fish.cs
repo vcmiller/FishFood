@@ -145,11 +145,32 @@ public class Fish : MonoBehaviour {
 
     [SerializeField]
     private float _deadSpeed = 0.5f;
+    
+    [Header("Sound")]
+    [SerializeField]
+    public AudioSource _audioSource;
+    
+    [SerializeField]
+    public AudioClip[] _eatingSounds;
+
+    [SerializeField]
+    private AudioSource _bubbleSource;
+    
+    [SerializeField]
+    private AudioClip[] _bubbleSounds;
+
+    [SerializeField]
+    private float _bubbleSoundDuration;
+    
+    [SerializeField]
+    private float _bubbleSoundDelay;
 
     private PassiveTimer _keepRotatingTimer;
     private PassiveTimer _bubbleTimer;
     private PassiveTimer _feedingTimer;
     private PassiveTimer _healthRegenTimer;
+    private PassiveTimer _bubbleSoundTimer;
+    private PassiveTimer _bubbleSoundDelayTimer;
     private Quaternion _lastDesiredRotation;
     private float _randomSteeringTime;
     private Vector3 _randomSteeringOffsets;
@@ -179,6 +200,9 @@ public class Fish : MonoBehaviour {
         _randomSteeringOffsets = new Vector3(Random.Range(0, 100), Random.Range(0, 100), Random.Range(0, 100));
 
         _bubbleTimer = new PassiveTimer(Random.Range(_minBubbleDelay, _maxBubbleDelay));
+        
+        _bubbleSoundTimer = new PassiveTimer(_bubbleSoundDuration);
+        _bubbleSoundDelayTimer = new PassiveTimer(_bubbleSoundDelay);
 
         if (!_speciesGroups.TryGetValue(_species, out List<Fish> speciesGroup)) {
             speciesGroup = new List<Fish>();
@@ -262,6 +286,12 @@ public class Fish : MonoBehaviour {
             _bubbleParticles.Play();
             _bubbleTimer.Interval = Random.Range(_minBubbleDelay, _maxBubbleDelay);
             _bubbleTimer.StartInterval();
+            
+            _bubbleSoundTimer.StartInterval();
+        }
+
+        if (!_bubbleSoundTimer.IsIntervalEnded && _bubbleSoundDelayTimer.TryConsume()) {
+            _bubbleSource.PlayOneShot(_bubbleSounds[Random.Range(0, _bubbleSounds.Length)]);
         }
 
         UpdateFood();
@@ -514,6 +544,7 @@ public class Fish : MonoBehaviour {
         if (other.TryGetComponent(out FishFood food) && _feedingTimer.TryConsume()) {
             Food += food.Value;
             food.OnEat();
+            _audioSource.PlayOneShot(_eatingSounds[Random.Range(0, _eatingSounds.Length)]);
         }
     }
 

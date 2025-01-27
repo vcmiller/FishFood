@@ -6,8 +6,17 @@ public class BrushTool : Tool {
 
     [SerializeField]
     private float _scrubRatePerMovement = 0.1f;
+    
+    [SerializeField]
+    private AudioSource _audioSource;
 
     private static readonly int Scrub = Animator.StringToHash("Scrub");
+
+    public override void Deactivate() {
+        base.Deactivate();
+        
+        _audioSource.Stop();
+    }
 
     protected override void Update() {
         base.Update();
@@ -16,10 +25,18 @@ public class BrushTool : Tool {
 
         Rect cameraRect = _camera.Rect;
         bool inCamera = cameraRect.Contains(Input.mousePosition);
+        
+        bool scrubbingInCamera = scrubbing && inCamera;
 
-        _animator.SetBool(Scrub, scrubbing && inCamera);
+        _animator.SetBool(Scrub, scrubbingInCamera);
+        
+        if (scrubbingInCamera && !_audioSource.isPlaying) {
+            _audioSource.Play();
+        } else if (!scrubbingInCamera && _audioSource.isPlaying) {
+            _audioSource.Stop();
+        }
 
-        if (!inCamera || !scrubbing) return;
+        if (!scrubbingInCamera) return;
 
         float scrub = _baseScrubRate * Time.deltaTime +
                       _scrubRatePerMovement * Input.mousePositionDelta.magnitude;

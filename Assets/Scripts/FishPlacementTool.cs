@@ -8,6 +8,8 @@ public class FishPlacementTool : Tool {
     public RectTransform _validPlacementIndicator;
     public RectTransform _invalidPlacementIndicator;
     public Image _placementImage;
+    
+    public AudioSource _audioSource;
 
     private Image _buttonImage;
 
@@ -34,6 +36,7 @@ public class FishPlacementTool : Tool {
         if (canPlace && Input.GetMouseButtonDown(0)) {
             Fish fish = Instantiate(_placementObject, point, Quaternion.identity);
             fish._tank = _camera.Tank;
+            _audioSource.PlayOneShot(_audioSource.clip);
         }
     }
 

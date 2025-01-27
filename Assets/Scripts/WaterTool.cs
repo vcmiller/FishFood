@@ -9,6 +9,8 @@ public class WaterTool : Tool {
     public ParticleSystem[] _pourEffects;
     public bool[] _effectsAtTop;
     
+    public AudioSource _pourSoundSource;
+    
     protected override void Update() {
         base.Update();
 
@@ -39,6 +41,12 @@ public class WaterTool : Tool {
     }
     
     private void SetPlayingParticles(bool playing) {
+        if (playing && !_pourSoundSource.isPlaying) {
+            _pourSoundSource.Play();
+        } else if (!playing && _pourSoundSource.isPlaying) {
+            _pourSoundSource.Stop();
+        }
+        
         for (int i = 0; i < _pourEffects.Length; i++) {
             ParticleSystem effect = _pourEffects[i];
             if (!effect.isPlaying) effect.Play();

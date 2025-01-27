@@ -4,6 +4,7 @@ public class FoodTool : Tool {
     public FishFood _foodPrefab;
     public int _numToCreate;
     public float _range = 0.1f;
+    public AudioSource _sound;
     private static readonly int Shake = Animator.StringToHash("Shake");
 
     protected override void Update() {
@@ -14,6 +15,7 @@ public class FoodTool : Tool {
             if (!cameraRect.Contains(Input.mousePosition)) return;
 
             _animator.SetTrigger(Shake);
+            _sound.PlayOneShot(_sound.clip);
 
             Bounds bounds = _camera.Tank.Bounds;
 

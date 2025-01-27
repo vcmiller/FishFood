@@ -9,6 +9,8 @@ public class GroundObjectPlacementTool : Tool {
     public RectTransform _validPlacementIndicator;
     public RectTransform _invalidPlacementIndicator;
     public Image _placementImage;
+    
+    public AudioSource _audioSource;
 
     private Image _buttonImage;
 
@@ -79,6 +81,7 @@ public class GroundObjectPlacementTool : Tool {
 
         if (canPlace && Input.GetMouseButtonDown(0)) {
             Instantiate(_placementObject, point, Quaternion.Euler(0, _rotation, 0));
+            _audioSource.PlayOneShot(_audioSource.clip);
         }
     }
 
